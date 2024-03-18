@@ -9,7 +9,17 @@
     "lint": "npx prettier --write src/**/*.ts",
     "build": "rimraf lib && tsc"
   },
-  "keywords": [],
+  "keywords": [
+    "NestJS",
+    "Logging",
+    "Pino",
+    "Winston",
+    "Configuration",
+    "Flexibility",
+    "Observability",
+    "Debugging",
+    "Integration"
+  ],
   "author": "webcoderspeed",
   "license": "ISC",
   "files": [
