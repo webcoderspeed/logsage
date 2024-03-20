@@ -1,9 +1,10 @@
-import { LogLevel } from '@nestjs/common';
+import { Injectable, LogLevel } from '@nestjs/common';
 import pino from 'pino';
 import { ILogger, ILoggerOptions } from '../../types/logger.types';
 import { format } from 'date-fns';
 import formatLogMessage from '../../utils/formatLogMessage';
 
+@Injectable()
 export class PinoService implements ILogger {
   private readonly logger: pino.Logger<LogLevel>;
 

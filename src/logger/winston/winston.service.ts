@@ -1,9 +1,11 @@
 import { createLogger, transports, format } from 'winston';
 import { ILogger, ILoggerOptions } from '../../types/logger.types';
 import formatLogMessage from '../../utils/formatLogMessage';
+import { Injectable } from '@nestjs/common';
 
-const { combine, timestamp, printf, colorize, align  } = format;
+const { combine, timestamp, printf, colorize, align } = format;
 
+@Injectable()
 export class WinstonService implements ILogger {
   private readonly logger;
 
@@ -16,8 +18,7 @@ export class WinstonService implements ILogger {
           format: ' YYYY-MM-DDThh:mm:ss ',
         }),
         align(),
-        printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`),
-        
+        printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
       ),
       ...loggerOptions,
     });

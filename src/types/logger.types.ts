@@ -1,6 +1,6 @@
-import { LogLevel } from '@nestjs/common'
-import { DestinationStream, LoggerOptions as PinoLoggerOptions } from 'pino'
-import { LoggerOptions as WinstonLoggerOptions, LogMethod} from 'winston'
+import { LogLevel } from '@nestjs/common';
+import { DestinationStream, LoggerOptions as PinoLoggerOptions } from 'pino';
+import { LoggerOptions as WinstonLoggerOptions } from 'winston';
 
 export interface ILogger {
   info(message: string, data?: unknown): void;
@@ -24,4 +24,4 @@ type IWinstonOptions = {
   options?: WinstonLoggerOptions | DestinationStream;
 };
 
-export type ILoggerOptions = IPinoOptions | IWinstonOptions
+export type ILoggerOptions = IPinoOptions | IWinstonOptions;
