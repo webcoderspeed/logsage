@@ -1,14 +1,87 @@
 # NestJS Logger
 
-NestJS Logger is a versatile logging solution built on top of Pino and Winston, designed specifically for NestJS applications. It provides developers with the flexibility to select between Pino and Winston as the underlying logging mechanism and configure logging behavior according to their preferences.
+NestJS Logger stands as a pioneering logging solution tailored explicitly for NestJS applications. It marks the advent of the first logger package for distributed logging within the NestJS ecosystem, innovatively constructed atop both Winston and Pino. This unique amalgamation offers developers unparalleled flexibility, allowing them to seamlessly switch between Pino and Winston as the underlying logging mechanism while fine-tuning logging behavior to suit individual preferences.
 
-## Features
+By drawing inspiration from Java's Mapped Diagnostic Context (MDC) pattern, this package revolutionizes the landscape of distributed tracing within NestJS applications. Just as MDC pattern empowers Java developers with comprehensive logging capabilities, our Logger package extends similar prowess to the Node.js realm, enabling efficient management of contextual information across asynchronous operations.
+
+## Mapped Diagnostic Context (MDC) in JAVA
+
+The concept of Mapped Diagnostic Context (MDC) is commonly used in Java logging frameworks like Logback and Log4j to associate contextual information with log messages. MDC allows developers to enrich log messages with additional data specific to the current execution context, such as user IDs, session IDs, request IDs, or any other relevant metadata.
+
+In Java, MDC is typically implemented using thread-local variables. When a request enters the system, a unique identifier (e.g., request ID) is generated, and it's stored in the MDC. As the request traverses through various layers of the application, the MDC retains this identifier, making it available for logging purposes. Each log message emitted within the context of this request can then include this identifier, allowing for easy correlation of log messages related to the same request.
+
+While MDC is a common pattern in Java, it's important to note that JavaScript, including Node.js and NestJS, doesn't natively support thread-local variables like Java. Therefore, a similar mechanism needs to be implemented using asynchronous context management libraries like `cls-hooked` (Continuation Local Storage) in Node.js.
+
+The `cls-hooked` library allows developers to create and manage asynchronous context within Node.js applications. It provides a way to store contextual information across asynchronous function calls without explicitly passing the data as function arguments.
+
+In the context of NestJS, the `LoggerMiddleware` demonstrated earlier leverages `cls-hooked` to manage the trace ID associated with each incoming request. This middleware ensures that the trace ID is extracted from the request headers (`x-trace-id`) or generated if not provided. The trace ID is then stored in the CLS namespace (`createNamespace`), making it accessible throughout the request lifecycle. This trace ID is subsequently utilized in log messages, enabling distributed tracing within the application.
+
+Overall, while the concept of MDC is more prevalent in Java logging frameworks, similar functionality can be achieved in Node.js and NestJS applications using asynchronous context management libraries like `cls-hooked`. The `LoggerMiddleware` provided in NestJS demonstrates how to seamlessly integrate such functionality for distributed tracing and contextual logging within NestJS applications.
+
+## Components:
+- **Logger**: The logging framework responsible for emitting log messages.
+- **MDC**: A thread-local map provided by the logging framework to store contextual information.
+
+## Architecture Design:
+```sql
+
+                +---------------------------------------+
+                |                                       |
+                |            Application Code           |
+                |                                       |
+                +---------------------------------------+
+                                  |
+                                  |
+                                  v
+                +---------------------------------------+
+                |                                       |
+                |   Logger (e.g., Logback, Log4j)       |
+                |                                       |
+                +---------------------------------------+
+                                  |
+                                  |
+                                  v
+                +---------------------------------------+
+                |                                       |
+                |            Mapped Diagnostic          |
+                |               Context (MDC)            |
+                |                                       |
+                +---------------------------------------+
+
+```
+
+## Workflow:
+- **Application Code**: The application code emits log messages using the logger provided by the logging framework.
+- **Logger**: The logging framework intercepts log messages generated by the application code. Before emitting a log message, it checks the MDC for any contextual information associated with the current thread.
+- **Mapped Diagnostic Context (MDC)**: The MDC is a thread-local map provided by the logging framework. It allows developers to store and retrieve contextual information specific to the current thread. Before logging a message, the logging framework retrieves contextual information from the MDC and includes it in the log message.
+
+## Key Features:
+- **Thread-Local Storage**: The MDC provides thread-local storage for contextual information, ensuring that each thread maintains its own set of context variables.
+- **Automatic Context Propagation**: Asynchronous operations spawned from the main thread inherit the context stored in the MDC, enabling seamless propagation of contextual information across asynchronous boundaries.
+- **Dynamic Contextual Enrichment**: Developers can dynamically enrich log messages with contextual information by adding key-value pairs to the MDC. This information can be updated or removed as the execution context changes.
+
+## Benefits:
+- **Enhanced Log Context**: MDC enables developers to enrich log messages with contextual information, providing valuable insights into the execution context of each log message.
+- **Improved Debugging**: Contextual information stored in the MDC simplifies debugging by providing additional context for log messages, making it easier to trace the flow of execution through the application.
+- **Efficient Diagnostics**: MDC facilitates efficient diagnostics by associating log messages with relevant metadata, such as request IDs or user IDs, allowing for easier correlation and analysis of log data.
+
+## Features of LogSage
 
 - Seamless integration with NestJS applications.
 - Option to choose between Pino and Winston as the logging library.
 - Easy configuration management for fine-tuning logging behavior.
 - Supports various configuration options such as log levels, output formats, and log destinations.
 - Enhanced debugging capabilities for gaining insights into application behavior and performance.
+
+### Trace ID Management
+
+- **Trace ID Injection**: The LoggerMiddleware seamlessly manages trace IDs within incoming requests. When a request is received, the middleware checks for the presence of a trace ID (`x-trace-id` header). If a trace ID is found, it is utilized throughout the request lifecycle. If not, the middleware generates a unique trace ID and attaches it to the request. This automatic handling ensures that each request within your NestJS application is associated with a trace ID, facilitating distributed tracing.
+
+- **Facilitating Distributed Tracing**: Trace IDs play a crucial role in distributed tracing by correlating and tracking requests as they traverse various services within a distributed system. With the LoggerMiddleware in place, each log entry associated with a request includes the corresponding trace ID. This enables end-to-end visibility into request flows, allowing developers to trace the path of a request across multiple microservices and gain insights into performance bottlenecks or errors.
+
+- **Enhanced Observability**: By incorporating trace IDs into log entries, the LoggerMiddleware enhances the observability of your application. Developers can utilize trace IDs to trace the journey of individual requests, troubleshoot issues, and analyze the behavior of the application under different scenarios. This level of visibility empowers teams to identify and address issues promptly, leading to improved reliability and performance.
+
+- **Interoperability**: The use of standardized trace IDs (`X-Trace-ID`) ensures interoperability with existing distributed tracing systems and tools. These trace IDs can be propagated across service boundaries, allowing seamless integration with external tracing solutions such as Jaeger, Zipkin, or OpenTelemetry. This interoperability enables organizations to leverage their preferred tracing infrastructure while still benefiting from the logging capabilities provided by the LoggerMiddleware.
 
 ## Installation
 
@@ -32,10 +105,15 @@ This configuration sets up logging in the AppModule:
 `Controllers`: The AppController is declared, handling incoming HTTP requests.
 
 ```typescript
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { LoggerModule, LoggerService, LoggerType } from 'logsage';
+import {
+  LoggerMiddleware,
+  LoggerModule,
+  LoggerService,
+  LoggerType,
+} from 'logsage';
 
 @Module({
   imports: [LoggerModule],
@@ -45,12 +123,16 @@ import { LoggerModule, LoggerService, LoggerType } from 'logsage';
     {
       provide: LoggerService,
       useFactory: () => {
-        return new LoggerService(LoggerType.WINSTON);
+        return new LoggerService(LoggerType.PINO);
       },
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
 ```
 
 ### Service Injection with LoggerService
@@ -61,7 +143,7 @@ export class AppModule {}
 import { Controller, Get, Req } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Request } from 'express';
-import { LoggerService } from 'logsage';
+import { LoggerService } from 'speed-logger-1';
 
 @Controller()
 export class AppController {
@@ -72,38 +154,143 @@ export class AppController {
 
   @Get()
   getHello(@Req() req: Request): string {
-    this.logger.info('X-Trace-ID', req.headers['X-Trace-ID']);
+    this.logger.info('Hello from Controller!');
     return this.appService.getHello();
   }
 }
 ```
 
-### Jaeger Tracer Integration
+## Request Headers Example
 
-> This snippet demonstrates integrating Jaeger client for distributed tracing in a NestJS app. The TracingInterceptor from logsage intercepts requests, initialized with Jaeger tracer for distributed tracing.
-
-> The X-Trace-ID header is automatically injected into incoming requests when integrating Jaeger client for distributed tracing in a NestJS application. This snippet demonstrates how to set up distributed tracing using Jaeger client and logsage's TracingInterceptor.
-
-```typescript
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { TracingInterceptor, initialiseTrace } from 'logsage';
-
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-
-  const serviceName = 'AppService';
-
-  app.useGlobalInterceptors(
-    new TracingInterceptor(initialiseTrace(serviceName))
-  );
-
-  await app.listen(1337);
+```bash
+{
+  host: 'localhost:1337',
+  connection: 'keep-alive',
+  'cache-control': 'max-age=0',
+  'sec-ch-ua': '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"',
+  'sec-ch-ua-mobile': '?0',
+  'sec-ch-ua-platform': '"macOS"',
+  'upgrade-insecure-requests': '1',
+  'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+  accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+  'sec-fetch-site': 'none',
+  'sec-fetch-mode': 'navigate',
+  'sec-fetch-user': '?1',
+  'sec-fetch-dest': 'document',
+  'accept-encoding': 'gzip, deflate, br, zstd',
+  'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8',
+  cookie: 'token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1OTE2YWMyMGQ1NTA3MmFhMjNiYzRhOSIsImlhdCI6MTcxMDA3NjU5OSwiZXhwIjoxNzEyNjY4NTk5fQ.P7ox3xVVl03QvgiIyP907D8yCuGKmqNUWwnswE0JO0Q',
+  'if-none-match': 'W/"c-Lve95gjOVATpfV8EL5X4nxwjKHE"',
+  'x-trace-id': '5e58338c-919f-42ea-89bc-78144d365d10'
 }
-bootstrap();
+[ 2024-03-20T22:19:08 ] INFO: [5e58338c-919f-42ea-89bc-78144d365d10] : {"message":"Hello from Controller!"}
+[ 2024-03-20T22:19:08 ] INFO: [5e58338c-919f-42ea-89bc-78144d365d10] : {"message":"Hello from Service!"}
 ```
 
-This setup ensures that tracing information is seamlessly injected into incoming requests, facilitating distributed tracing across your NestJS application. With Jaeger client and the TracingInterceptor from logsage, you can effectively monitor request flows and diagnose performance issues, ultimately enhancing the observability of your application.
+## Logs Output:
+
+```bash
+[ 2024-03-20T22:19:08 ] INFO: [5e58338c-919f-42ea-89bc-78144d365d10] : {"message":"Hello from Controller!"}
+[ 2024-03-20T22:19:08 ] INFO: [5e58338c-919f-42ea-89bc-78144d365d10] : {"message":"Hello from Service!"}
+```
+
+### Log Output Breakdown
+
+| Part            | Description                                               | Example                                  |
+| --------------- | --------------------------------------------------------- | ---------------------------------------- |
+| **Timestamp**   | Timestamp indicating when the log entry was generated.    | `[ 2024-03-20T22:19:08 ]`                |
+| **Log Level**   | Severity of the log message.                              | `INFO`                                   |
+| **Trace ID**    | Unique identifier associated with the log entry.          | `[5e58338c-919f-42ea-89bc-78144d365d10]` |
+| **Separator**   | Character separating the trace ID and the log message.    | `:`                                      |
+| **Log Message** | Details about the logged event, typically in JSON format. | `{"message":"Hello from Controller!"}`   |
+
+### Distributed Tracing with LoggerMiddleware
+
+> This snippet illustrates how to enable distributed tracing in a NestJS application using a custom LoggerMiddleware. The LoggerMiddleware provided automatically injects a trace ID (x-trace-id header) into incoming requests, facilitating distributed tracing throughout the application.
+
+```typescript
+import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import {
+  LoggerMiddleware,
+  LoggerModule,
+  LoggerService,
+  LoggerType,
+} from 'logsage';
+
+@Module({
+  imports: [LoggerModule],
+  controllers: [AppController],
+  providers: [
+    AppService,
+    {
+      provide: LoggerService,
+      useFactory: () => {
+        return new LoggerService(LoggerType.PINO);
+      },
+    },
+  ],
+})
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
+```
+
+This setup ensures that tracing information is seamlessly injected into incoming requests, facilitating distributed tracing across your NestJS application. By utilizing the LoggerMiddleware, trace IDs are automatically managed, either by extracting them from the incoming requests' headers (`x-trace-id`) or generating unique IDs if not provided.
+
+With the integration of the LoggerMiddleware, you can effectively monitor request flows and diagnose performance issues, ultimately enhancing the observability of your application. This allows for comprehensive tracing of request paths, enabling deeper insights into the behavior and performance of your services.
+
+## Logging and Distributed Tracing Architecture
+
+- **Components**:
+- **LoggerMiddleware**: Middleware responsible for managing the trace ID and logging requests.
+- **LoggerService**: Service responsible for configuring and interacting with the underlying logging library (Pino or Winston).
+- **CLS (Continuation Local Storage)**: Library for managing context across asynchronous operations.
+
+## Architecture
+
+```sql
+                        +-------------------+
+                        |                   |
+                        |   Request Flow    |
+                        |                   |
+                        +-------------------+
+                                  |
+                                  |
+                                  v
+                        +-------------------+
+                        |                   |
+                        | LoggerMiddleware  |
+                        |                   |
+                        +-------------------+
+                                  |
+                                  v
+                        +-------------------+
+                        |                   |
+                        |    LoggerService  |
+                        |                   |
+                        +-------------------+
+                                  |
+                                  v
+                        +-------------------+
+                        |                   |
+                        |      CLS          |
+                        | (Continuation     |
+                        |  Local Storage)   |
+                        +-------------------+
+```
+
+## Benefits:
+- **Trace ID Management**: The LoggerMiddleware ensures that each request is associated with a trace ID, facilitating distributed tracing across the application.
+
+- **Contextual Logging**: The trace ID is utilized in log messages, enabling developers to trace the path of a request and correlate log entries related to the same request.
+
+- **Asynchronous Context Management**: Utilizing CLS ensures that the trace ID remains associated with the request context even across asynchronous operations, providing consistent and reliable logging.
+
+This architecture design provides a foundation for implementing robust logging and distributed tracing capabilities within a NestJS application, enhancing observability and facilitating efficient debugging and performance analysis.
 
 ## Contributing
 
