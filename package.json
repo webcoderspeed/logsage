@@ -48,5 +48,13 @@
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcoderspeed/logsage"
+  },
+  "homepage": "https://github.com/webcoderspeed/logsage",
+  "bugs": {
+    "url": "https://github.com/webcoderspeed/logsage/issues"
   }
 }
