@@ -143,7 +143,7 @@ export class AppModule {
 import { Controller, Get, Req } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Request } from 'express';
-import { LoggerService } from 'speed-logger-1';
+import { LoggerService } from 'logsage';
 
 @Controller()
 export class AppController {
