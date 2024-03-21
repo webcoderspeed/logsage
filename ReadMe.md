@@ -1,8 +1,8 @@
-# NestJS Logger
+# Logsage
 
-NestJS Logger stands as a pioneering logging solution tailored explicitly for NestJS applications. It marks the advent of the first logger package for distributed logging within the NestJS ecosystem, innovatively constructed atop both Winston and Pino. This unique amalgamation offers developers unparalleled flexibility, allowing them to seamlessly switch between Pino and Winston as the underlying logging mechanism while fine-tuning logging behavior to suit individual preferences.
+Logsage Logger represents a pioneering logging solution specifically tailored for NestJS applications. It marks a significant milestone as the first logger package designed for distributed logging within the NestJS ecosystem, creatively engineered atop both Winston and Pino. This unique fusion offers developers unmatched flexibility, allowing seamless switching between Pino and Winston as the underlying logging mechanism, all while fine-tuning logging behavior to individual preferences.
 
-By drawing inspiration from Java's Mapped Diagnostic Context (MDC) pattern, this package revolutionizes the landscape of distributed tracing within NestJS applications. Just as MDC pattern empowers Java developers with comprehensive logging capabilities, our Logger package extends similar prowess to the Node.js realm, enabling efficient management of contextual information across asynchronous operations.
+Inspired by Java's Mapped Diagnostic Context (MDC) pattern, Logsage Logger revolutionizes distributed tracing within NestJS applications. Similar to how the MDC pattern empowers Java developers with comprehensive logging capabilities, our Logger package extends similar prowess to the Node.js realm, facilitating efficient management of contextual information across asynchronous operations.
 
 ## Mapped Diagnostic Context (MDC) in JAVA
 
