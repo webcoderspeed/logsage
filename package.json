@@ -1,6 +1,6 @@
 {
   "name": "logsage",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Powerful logger module for NestJS, seamlessly integrating Pino and Winston for flexible logging with easy configuration.",
   "main": "lib/main.js",
   "types": "lib/main.d.ts",

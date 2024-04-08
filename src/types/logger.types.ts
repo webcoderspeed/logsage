@@ -14,14 +14,18 @@ export enum LoggerType {
   PINO = 'pino',
 }
 
+type ICustomOptions = {
+  enableRequestLogging?: boolean;
+};
+
 type IPinoOptions = {
   type: LoggerType.PINO;
-  options?: PinoLoggerOptions<LogLevel> | DestinationStream;
+  options?: (PinoLoggerOptions<LogLevel> | DestinationStream) & ICustomOptions;
 };
 
 type IWinstonOptions = {
   type: LoggerType.WINSTON;
-  options?: WinstonLoggerOptions | DestinationStream;
+  options?: WinstonLoggerOptions & ICustomOptions;
 };
 
 export type ILoggerOptions = IPinoOptions | IWinstonOptions;
