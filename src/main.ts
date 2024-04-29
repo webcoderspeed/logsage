@@ -5,4 +5,4 @@ export { LoggerModule, LoggerService };
 export * from './types';
 export * from './middlewares'
 export { createLogger, transports, format };
-
+export * from './decorators'

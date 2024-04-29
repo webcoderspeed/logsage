@@ -15,10 +15,10 @@ export class WinstonService implements ILogger {
       format: combine(
         colorize({ all: true }),
         timestamp({
-          format: ' YYYY-MM-DDThh:mm:ss ',
+          format: 'YYYY-MM-DDThh:mm:ss',
         }),
         align(),
-        printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
+        printf((info) => `[${info.timestamp}] ${info.level}:${info.message}`)
       ),
       ...loggerOptions,
     });

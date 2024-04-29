@@ -1,13 +1,13 @@
-function formatLogMessage(message: string, data?: unknown) {
+function formatLogMessage(logmsg: string, data?: unknown) {
   if (data && typeof data === 'object' && 'traceId' in data) {
     const { traceId, ...restData } = data as { traceId: string };
-    const stringifiedData = JSON.stringify({ message, ...restData });
+    const stringifiedData = JSON.stringify({ logmsg, ...restData });
 
-    return `[${traceId}] : ${stringifiedData}`;
+    return `[${traceId}]:${stringifiedData}`;
   }
 
   const logData = data ? { data } : {};
-  return JSON.stringify({ message, ...logData });
+  return JSON.stringify({ logmsg, ...logData });
 }
 
 export default formatLogMessage;

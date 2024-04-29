@@ -17,7 +17,7 @@ export class PinoService implements ILogger {
         pid: false,
       },
       timestamp: () =>
-        `,"time":" ${format(new Date(), "yyyy-MM-dd'T'HH:mm:ss ")}"`,
+        `,"time":"${format(new Date(),"yyyy-MM-dd'T'HH:mm:ss")}"`,
       ...loggerOptions,
     });
   }
