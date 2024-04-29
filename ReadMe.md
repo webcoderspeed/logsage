@@ -6,17 +6,15 @@ Inspired by Java's Mapped Diagnostic Context (MDC) pattern, Logsage Logger revol
 
 ## Mapped Diagnostic Context (MDC) in JAVA
 
-The concept of Mapped Diagnostic Context (MDC) is commonly used in Java logging frameworks like Logback and Log4j to associate contextual information with log messages. MDC allows developers to enrich log messages with additional data specific to the current execution context, such as user IDs, session IDs, request IDs, or any other relevant metadata.
+The Mapped Diagnostic Context (MDC) pattern, commonly employed in Java logging frameworks like Logback and Log4j, enriches log messages with contextual information specific to the current execution context. In Java, MDC utilizes thread-local variables to store and propagate this context throughout the application's lifecycle.
 
-In Java, MDC is typically implemented using thread-local variables. When a request enters the system, a unique identifier (e.g., request ID) is generated, and it's stored in the MDC. As the request traverses through various layers of the application, the MDC retains this identifier, making it available for logging purposes. Each log message emitted within the context of this request can then include this identifier, allowing for easy correlation of log messages related to the same request.
+However, JavaScript, including Node.js and NestJS, lacks native support for thread-local variables. Instead, asynchronous context management libraries like `SpeedCache` can be utilized to implement a similar mechanism.
 
-While MDC is a common pattern in Java, it's important to note that JavaScript, including Node.js and NestJS, doesn't natively support thread-local variables like Java. Therefore, a similar mechanism needs to be implemented using asynchronous context management libraries like `cls-hooked` (Continuation Local Storage) in Node.js.
+`SpeedCache`, a custom library used in building `Logsage`, facilitates asynchronous context management within Node.js applications. It allows developers to store and retrieve contextual information across asynchronous function calls without the need for explicit passing of data as function arguments.
 
-The `cls-hooked` library allows developers to create and manage asynchronous context within Node.js applications. It provides a way to store contextual information across asynchronous function calls without explicitly passing the data as function arguments.
+In the context of NestJS, the `LoggerMiddleware` showcased earlier leverages `SpeedCache` to manage the trace ID associated with each incoming request. This middleware ensures that the trace ID is extracted from the request headers (`x-trace-id`) or generated if absent. The trace ID is then stored in the `SpeedCache` instance, making it accessible throughout the request lifecycle. Subsequently, this trace ID is utilized in log messages, enabling distributed tracing and contextual logging within the NestJS application.
 
-In the context of NestJS, the `LoggerMiddleware` demonstrated earlier leverages `cls-hooked` to manage the trace ID associated with each incoming request. This middleware ensures that the trace ID is extracted from the request headers (`x-trace-id`) or generated if not provided. The trace ID is then stored in the CLS namespace (`createNamespace`), making it accessible throughout the request lifecycle. This trace ID is subsequently utilized in log messages, enabling distributed tracing within the application.
-
-Overall, while the concept of MDC is more prevalent in Java logging frameworks, similar functionality can be achieved in Node.js and NestJS applications using asynchronous context management libraries like `cls-hooked`. The `LoggerMiddleware` provided in NestJS demonstrates how to seamlessly integrate such functionality for distributed tracing and contextual logging within NestJS applications.
+In summary, while MDC is commonly used in Java logging frameworks, a similar functionality can be achieved in JavaScript and NestJS applications using asynchronous context management libraries like `SpeedCache`. The `LoggerMiddleware` provided demonstrates how seamlessly integrate such functionality for distributed tracing and contextual logging within NestJS applications.
 
 ## Components:
 - **Logger**: The logging framework responsible for emitting log messages.
@@ -72,6 +70,11 @@ Overall, while the concept of MDC is more prevalent in Java logging frameworks, 
 - Easy configuration management for fine-tuning logging behavior.
 - Supports various configuration options such as log levels, output formats, and log destinations.
 - Enhanced debugging capabilities for gaining insights into application behavior and performance.
+- Distributed Logging: The Logger package enables distributed logging, allowing developers to efficiently manage contextual information across asynchronous operations within NestJS applications.
+- MessagePattern Integration: Logsage Logger seamlessly integrates with NestJS's MessagePattern decorator, facilitating the logging of messages exchanged between microservices.
+- PayloadWithTraceId Support: With support for PayloadWithTraceId, Logsage Logger enhances traceability by associating unique trace IDs with log messages.
+- Automatic TraceID Injection: Logsage Logger now seamlessly injects TraceID into log messages exchanged between microservices using Kafka, RabbitMQ, or NestJS's MessagePattern.
+
 
 ### Trace ID Management
 
@@ -142,23 +145,84 @@ export class AppModule {
 ```typescript
 import { Controller, Get, Req } from '@nestjs/common';
 import { AppService } from './app.service';
+import { LoggerService, TRACE_ID } from 'logsage';
 import { Request } from 'express';
-import { LoggerService } from 'logsage';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    private readonly logger: LoggerService
+    private readonly logger: LoggerService,
   ) {}
 
   @Get()
-  getHello(@Req() req: Request): string {
-    this.logger.info('Hello from Controller!');
-    return this.appService.getHello();
+  getHello(@Req() req: Request) {
+    const traceId = req.headers[TRACE_ID];
+    this.logger.info('Hello from AppController');
+    return this.appService.getHello({ traceId: traceId as string });
   }
 }
 ```
+
+### Usage in Distributed System with Logsage Logger
+In a distributed system architecture, communication between microservices often occurs through message brokers like Kafka or RabbitMQ. Logsage Logger enhances traceability within this ecosystem by automatically injecting TraceID into log messages, enabling seamless correlation of log events across services.
+
+## Producing a Message
+To produce a message with Logsage Logger, follow these steps:
+```typescript
+import { Injectable } from '@nestjs/common';
+import { ProducerService } from './kafka/producer.service';
+import { LoggerService } from 'logsage';
+
+@Injectable()
+export class AppService {
+  constructor(
+    private readonly producerService: ProducerService,
+    private readonly logger: LoggerService,
+  ) {}
+
+  async getHello({ traceId }: { traceId: string }) {
+    this.logger.info('Hello from AppService ');
+    await this.producerService.produce('test', {
+      value: JSON.stringify({ traceId }),
+    });
+    return { traceId };
+  }
+}
+```
+
+In this example, the AppService logs a message using Logsage Logger (this.logger.info) and then produces a message to the Kafka topic 'test'. The TraceID is automatically injected into the log message, ensuring traceability.
+
+## Consuming a Message
+When consuming a message within a NestJS controller, Logsage Logger facilitates easy TraceID injection into log messages:
+
+**Note**: Instead of using the regular `Payload` from @nestjs/microservices, `PayloadWithTraceId` from Logsage Logger is utilized, ensuring automatic TraceID injection into log messages.
+
+```typescript
+import { Controller } from '@nestjs/common';
+import { AppService } from './app.service';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import { LoggerService, PayloadWithTraceId } from 'logsage';
+
+@Controller()
+export class AppController {
+  constructor(
+    private readonly appService: AppService,
+    private readonly logger: LoggerService,
+  ) {}
+
+  @MessagePattern('test')
+  getHello(@PayloadWithTraceId() message) {
+    this.logger.info('Hello from AppController ', { message });
+    return this.appService.getHello({ message });
+  }
+}
+```
+
+In this code snippet, the AppController receives a message from Kafka with the pattern 'test'. Logsage Logger automatically injects the TraceID associated with the message, allowing seamless correlation of log events within the distributed system.
+
+With Logsage Logger, tracing and debugging in distributed systems become more efficient and streamlined, enhancing developers' ability to monitor and troubleshoot microservices architectures.
+
 
 ## Request Headers Example
 
@@ -179,7 +243,6 @@ export class AppController {
   'sec-fetch-dest': 'document',
   'accept-encoding': 'gzip, deflate, br, zstd',
   'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8',
-  cookie: 'token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1OTE2YWMyMGQ1NTA3MmFhMjNiYzRhOSIsImlhdCI6MTcxMDA3NjU5OSwiZXhwIjoxNzEyNjY4NTk5fQ.P7ox3xVVl03QvgiIyP907D8yCuGKmqNUWwnswE0JO0Q',
   'if-none-match': 'W/"c-Lve95gjOVATpfV8EL5X4nxwjKHE"',
   'x-trace-id': '5e58338c-919f-42ea-89bc-78144d365d10'
 }
