@@ -1,1 +1,1 @@
-export * from './payload-with-traceid'
+export * from './payload-with-traceid';

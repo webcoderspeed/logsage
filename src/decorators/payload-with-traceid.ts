@@ -17,5 +17,5 @@ export const PayloadWithTraceId = createParamDecorator(
     speedCache.set(TRACE_ID, traceId);
 
     return request;
-  }
+  },
 );

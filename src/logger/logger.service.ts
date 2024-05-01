@@ -9,7 +9,7 @@ export class LoggerService implements ILogger {
 
   constructor(
     type: ILoggerOptions['type'] = LoggerType.PINO,
-    options?: ILoggerOptions['options']
+    options?: ILoggerOptions['options'],
   ) {
     const loggerFactory = new LoggerFactory();
     this.logger = loggerFactory.getLogger(type, options);

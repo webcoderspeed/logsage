@@ -1,1 +1,1 @@
-export * from './trace-handler.util'
+export * from './trace-handler.util';
