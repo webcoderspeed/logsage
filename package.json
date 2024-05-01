@@ -1,6 +1,6 @@
 {
   "name": "logsage",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Powerful logger module for NestJS, seamlessly integrating Pino and Winston for flexible logging with easy configuration.",
   "main": "lib/main.js",
   "types": "lib/main.d.ts",
@@ -37,7 +37,6 @@
     "winston": "^3.13.0"
   },
   "devDependencies": {
-    "@types/cls-hooked": "^4.3.8",
     "@types/node": "^20.12.7",
     "@types/uuid": "^9.0.8",
     "nodemon": "^3.1.0",
@@ -45,13 +44,5 @@
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/webcoderspeed/logsage"
-  },
-  "homepage": "https://github.com/webcoderspeed/logsage",
-  "bugs": {
-    "url": "https://github.com/webcoderspeed/logsage/issues"
   }
 }

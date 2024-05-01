@@ -1,14 +1,15 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import speedCache from '../db';
-import { TRACE_ID } from '../constants';
+import { TraceIdHandler } from '../utils';
 
 export const PayloadWithTraceId = createParamDecorator(
   (data: string | undefined, ctx: ExecutionContext) => {
-    const request: Express.Request = ctx.switchToHttp().getRequest();
+    const TRACE_ID = TraceIdHandler.getTraceIdField();
+    const request = ctx.switchToHttp().getRequest();
 
-    if (request && typeof request === 'object' && 'traceId' in request) {
-      speedCache.set(TRACE_ID, request.traceId);
+    if (request && typeof request === 'object' && TRACE_ID in request) {
+      speedCache.set(TRACE_ID, request[TRACE_ID]);
       return request;
     }
 

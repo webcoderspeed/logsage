@@ -2,7 +2,7 @@ import { Injectable, LogLevel } from '@nestjs/common';
 import pino from 'pino';
 import { ILogger, ILoggerOptions } from '../../types/logger.types';
 import { format } from 'date-fns';
-import formatLogMessage from '../../utils/formatLogMessage';
+import formatLogMessage from '../../utils/format-log-message.util';
 
 @Injectable()
 export class PinoService implements ILogger {
@@ -17,7 +17,7 @@ export class PinoService implements ILogger {
         pid: false,
       },
       timestamp: () =>
-        `,"time":"${format(new Date(),"yyyy-MM-dd'T'HH:mm:ss")}"`,
+        `,"time":"${format(new Date(), "yyyy-MM-dd'T'HH:mm:ss")}"`,
       ...loggerOptions,
     });
   }

@@ -1,6 +1,6 @@
 import { createLogger, transports, format } from 'winston';
 import { ILogger, ILoggerOptions } from '../../types/logger.types';
-import formatLogMessage from '../../utils/formatLogMessage';
+import formatLogMessage from '../../utils/format-log-message.util';
 import { Injectable } from '@nestjs/common';
 
 const { combine, timestamp, printf, colorize, align } = format;

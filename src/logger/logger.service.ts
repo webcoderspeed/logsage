@@ -1,6 +1,7 @@
 import { LoggerFactory } from './factory/logger.factory';
 import { ILogger, ILoggerOptions, LoggerType } from '../types/logger.types';
 import { LoggerMiddleware } from '../middlewares';
+import { TraceIdHandler } from '../utils';
 
 export class LoggerService implements ILogger {
   private logger: ILogger;
@@ -15,6 +16,7 @@ export class LoggerService implements ILogger {
     this.enableRequestLogging = options?.enableRequestLogging ?? false;
   }
   private addRequestId(data?: unknown): unknown {
+    const TRACE_ID = TraceIdHandler.getTraceIdField();
     const traceId = LoggerMiddleware.getRequestId();
 
     if (!traceId && !data) {
@@ -26,10 +28,10 @@ export class LoggerService implements ILogger {
     }
 
     if (!data) {
-      return { traceId };
+      return { [TRACE_ID]: traceId };
     }
 
-    return { ...data, traceId };
+    return { ...data, [TRACE_ID]: traceId };
   }
 
   info(message: string, data?: unknown): void {
