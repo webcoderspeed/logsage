@@ -19,12 +19,12 @@ type ICustomOptions = {
 };
 
 type IPinoOptions = {
-  type: LoggerType.PINO;
+  type?: LoggerType.PINO;
   options?: (PinoLoggerOptions<LogLevel> | DestinationStream) & ICustomOptions;
 };
 
 type IWinstonOptions = {
-  type: LoggerType.WINSTON;
+  type?: LoggerType.WINSTON;
   options?: WinstonLoggerOptions & ICustomOptions;
 };
 

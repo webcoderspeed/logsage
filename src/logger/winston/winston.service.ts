@@ -18,7 +18,7 @@ export class WinstonService implements ILogger {
           format: 'YYYY-MM-DDThh:mm:ss',
         }),
         align(),
-        printf((info) => `[${info.timestamp}] ${info.level}:${info.message}`)
+        printf((info) => `[${info.timestamp}]${info.level}:${info.message}`),
       ),
       ...loggerOptions,
     });

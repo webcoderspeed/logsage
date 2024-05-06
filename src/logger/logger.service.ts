@@ -5,64 +5,51 @@ import { TraceIdHandler } from '../utils';
 
 export class LoggerService implements ILogger {
   private logger: ILogger;
-  private enableRequestLogging: boolean = false;
+  private enableRequestLogging: boolean;
 
-  constructor(
-    type: ILoggerOptions['type'] = LoggerType.PINO,
-    options?: ILoggerOptions['options'],
-  ) {
+  constructor({
+    type = LoggerType.PINO,
+    options,
+  }: Partial<ILoggerOptions> = {}) {
     const loggerFactory = new LoggerFactory();
     this.logger = loggerFactory.getLogger(type, options);
     this.enableRequestLogging = options?.enableRequestLogging ?? false;
   }
-  private addRequestId(data?: unknown): unknown {
+
+  private addRequestId(
+    data?: Record<string, unknown>,
+  ): Record<string, unknown> {
     const TRACE_ID = TraceIdHandler.getTraceIdField();
     const traceId = LoggerMiddleware.getRequestId();
 
-    if (!traceId && !data) {
-      return {};
-    }
-
-    if (!traceId) {
-      return data;
-    }
-
-    if (!data) {
-      return { [TRACE_ID]: traceId };
-    }
+    if (!traceId) return data ?? {};
 
     return { ...data, [TRACE_ID]: traceId };
   }
 
-  info(message: string, data?: unknown): void {
+  private logWithRequestId(
+    level: keyof ILogger,
+    message: string,
+    data?: Record<string, unknown>,
+  ): void {
     const formattedData = this.addRequestId(data);
-    this.logger.info(message, formattedData);
-    if (this.enableRequestLogging) {
-      LoggerMiddleware.logRequest(this.logger);
-    }
+    this.logger[level](message, formattedData);
+    if (this.enableRequestLogging) LoggerMiddleware.logRequest(this.logger);
   }
 
-  warn(message: string, data?: unknown): void {
-    const formattedData = this.addRequestId(data);
-    this.logger.warn(message, formattedData);
-    if (this.enableRequestLogging) {
-      LoggerMiddleware.logRequest(this.logger);
-    }
+  info(message: string, data?: Record<string, unknown>): void {
+    this.logWithRequestId('info', message, data);
   }
 
-  error(message: string, data?: unknown): void {
-    const formattedData = this.addRequestId(data);
-    this.logger.error(message, formattedData);
-    if (this.enableRequestLogging) {
-      LoggerMiddleware.logRequest(this.logger);
-    }
+  warn(message: string, data?: Record<string, unknown>): void {
+    this.logWithRequestId('warn', message, data);
   }
 
-  verbose(message: string, data?: unknown): void {
-    const formattedData = this.addRequestId(data);
-    this.logger.verbose(message, formattedData);
-    if (this.enableRequestLogging) {
-      LoggerMiddleware.logRequest(this.logger);
-    }
+  error(message: string, data?: Record<string, unknown>): void {
+    this.logWithRequestId('error', message, data);
+  }
+
+  verbose(message: string, data?: Record<string, unknown>): void {
+    this.logWithRequestId('verbose', message, data);
   }
 }
