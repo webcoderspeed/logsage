@@ -1,6 +1,6 @@
 {
   "name": "logsage",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Powerful logger module for NestJS, seamlessly integrating Pino and Winston for flexible logging with easy configuration.",
   "main": "lib/main.js",
   "types": "lib/main.d.ts",
@@ -25,18 +25,18 @@
   "files": [
     "lib/**/*"
   ],
-  "dependencies": {
+  "devDependencies": {
     "@nestjs/common": "^10.3.8",
     "@nestjs/core": "^10.3.8",
+    "cls-hooked": "^4.2.2",
     "date-fns": "^3.6.0",
     "pino": "^8.21.0",
     "pino-pretty": "^10.3.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "uuid": "^9.0.1",
-    "winston": "^3.13.0"
-  },
-  "devDependencies": {
+    "winston": "^3.13.0",
+    "@types/cls-hooked": "^4.3.8",
     "@types/node": "^20.12.7",
     "@types/uuid": "^9.0.8",
     "nodemon": "^3.1.0",
